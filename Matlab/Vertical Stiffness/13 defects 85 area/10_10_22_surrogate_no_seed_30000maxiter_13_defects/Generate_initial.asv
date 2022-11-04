@@ -1,0 +1,15 @@
+clear all;
+x = zeros(12409,64);
+y = zeros(12409,1);
+for i = 0:12408
+    mat = readmatrix(['sim',num2str(i),'.txt']);
+    y(i+1) = mat(101);
+    first25 = mat(1:25);
+    second = mat(26:end);
+    l1 = second(1:2:50);
+    l2 = second(2:2:50);
+    theta = second(51:75);
+    l1 = nonzeros(l1);
+    l2 = nonzeros(l2);
+    l3 = nonzeros(theta);
+    x()
