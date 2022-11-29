@@ -16,10 +16,10 @@ class APDL:
         # finish setting up class attributes
         self.Lx = 2
         self.Ly = 2
-        self.Lz = 0.05
+        self.Lz = 0.01
         self.E = 1.086e8
         self.NU = 0.36
-        self.depth = self.Lz
+        self.mesh_size = 0.05
         # mapdl define
         self.mapdl = mapdl
         # iteration number and recording
@@ -49,11 +49,11 @@ class APDL:
             print("successfully generated output")
             self.mapdl.finish()
             result = self.mapdl.result
-            max_stress = self.get_max_stress(result)
-            print("max stress is: ", max_stress)
-            self.finish_one_iteration(input, max_stress)
+            cost = self.get_stiffness(result)
+            print("cost is: ", cost)
+            self.finish_one_iteration(input, cost)
             
-            return max_stress, result
+            return cost, result
         
         except Exception as e:
             
@@ -114,7 +114,7 @@ class APDL:
         
         self.mapdl.et(1,'SOLID186')
         
-        self.mapdl.lesize("ALL", self.depth, layer1=1)
+        self.mapdl.lesize("ALL", self.mesh_size, layer1=1)
         self.mapdl.mp('ex',1,self.E)
         self.mapdl.mp('nuxy',1,self.NU)
 
@@ -144,7 +144,18 @@ class APDL:
         ##TODO##
         # input:
         # output:
-        return
+        self.mapdl.post1()
+        self.mapdl.set("last", "last")
+        self.mapdl.nsel("S", "LOC", "X", 0)
+        self.mapdl.fsum()
+        reaction_1_bottom_X = self.mapdl.get("REAC_1", "FSUM", "", "ITEM", "FX")
+        #reaction_2 = self.mapdl.get("REAC_2", "FSUM", "", "ITEM", "FY")
+        self.mapdl.nsel("S", "LOC", "X", self.Lx)
+        self.mapdl.fsum()
+        reaction_2_top_X = self.mapdl.get("REAC_2", "FSUM", "", "ITEM", "FX")
+
+        stiffness = (abs(reaction_1_bottom_X)+abs(reaction_2_top_X))/2/abs(1e-3)
+        return stiffness
 
     def get_max_stress(self, result):
         ##TODO##
@@ -182,7 +193,7 @@ class APDL:
         self.mapdl.clear()
         self.mapdl.prep7()
         self.mapdl.csys(0)
-        self.mapdl.block(0, self.Lx, 0, self.Ly, 0, self.depth)
+        self.mapdl.block(0, self.Lx, 0, self.Ly, 0, self.Lz)
         
         #start setting up defects
         xcenter = [0.2,0.2,0.2,0.2,0.2, 0.6,0.6,0.6,0.6,0.6, 1.0,1.0,1.0,1.0,1.0, 1.4,1.4,1.4,1.4,1.4, 1.8,1.8,1.8,1.8,1.8]
@@ -224,7 +235,7 @@ class APDL:
         # input : necessary ellipse parameters
         # output : object with created ellipse
         self.mapdl.csys(0)
-        k1 = self.mapdl.cyl4(center_x, center_y,l1,'','','',self.depth) #create circle in local coords
+        k1 = self.mapdl.cyl4(center_x, center_y,l1,'','','',self.Lz) #create circle in local coords
         self.mapdl.clocal(20, 0, center_x, center_y, 0, theta) #TODO TIMON
         k2 = self.mapdl.vlscale(k1, '', '', 1, l2/l1, '','','',1) #scale circle to ellipse
         self.mapdl.csys(0) #return to original coords sys

@@ -21,7 +21,7 @@ print('Successfully set up the experiment')
 #
 e["Problem"]["Type"] = "Optimization"
 e["Problem"]["Objective Function"] = model
-#e["Problem"]["Constraints"] = [g1,g3]
+e["Problem"]["Constraints"] = [g1]
 print('setting up problem')
 
 # Creating 61 variables and setting their CCMA-ES bounds
@@ -50,7 +50,7 @@ e["Solver"]["Is Sigma Bounded"] = True
 e["Solver"]["Population Size"] = 10 # each generation will have around 8 attempts after passing the viability regime
 e["Solver"]["Viability Population Size"] = 4 # increase if constraints violated by too much times
 e["Solver"]["Termination Criteria"]["Max Value"] = 3.1e7
-e["Solver"]["Termination Criteria"]["Max Generations"] = 400
+e["Solver"]["Termination Criteria"]["Max Generations"] = 4000
 
 
 # added by myself

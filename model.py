@@ -37,13 +37,10 @@ def model(k):
 
 def g1(k):
   v = k["Parameters"]
-  temp = find_solid_area(v)
+  temp = apdl_class.solid_volume_percentage(v)
   k["F(x)"] = temp - 0.85
-  print('solid area percentage is : ', temp)
+  print('solid area percentage is from model.py: ', temp)
 
-def g2(k):
-  v = k["Parameters"]
-  k["F(x)"] = -1 * find_solid_area(v) + 0.69
 
 def g3(k):
   v = k["Parameters"]
@@ -52,12 +49,7 @@ def g3(k):
   print('the number of defects is : ', temp)      
 	
 # helper
-def find_solid_area(v1):
-  v1 = np.array(v1)
-  void_area = np.pi*v1[25:25+defects_num] @ v1[25+defects_num:25+2*defects_num].T;
-  total_area = 2*2;
-  solid_area_percentage = (total_area - void_area)/total_area;
-  return solid_area_percentage
+
  
 def find_num_defects_from_input(v1):
 	v1 = np.array(v1)
