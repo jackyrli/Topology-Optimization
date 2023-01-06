@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Mon Nov 14 15:54:26 2022
-
 NOTE TO SELF!!!! korali plot: python3 -m korali.plot
-
 @author: Jacky Li
 """
 import numpy as np
@@ -48,7 +46,9 @@ class APDL:
             
             print("successfully generated output")
             self.mapdl.finish()
+            self.perform_buckling_analysis()
             result = self.mapdl.result
+            print(result)
             cost = self.get_stiffness(result)
             print("cost is: ", cost)
             self.finish_one_iteration(input, cost)
@@ -66,7 +66,6 @@ class APDL:
             ##END TODO##
             print("\nresults saved in error"+str(self.errors_encountered)+".txt")
             np.savetxt('./sim_results/error'+str(self.errors_encountered)+'.txt', np.hstack((input,cost)), delimiter='/n')
-            
             return cost, result
         
         
@@ -130,7 +129,7 @@ class APDL:
         self.mapdl.d('all','all',0)
 
         self.mapdl.nsel('s','loc','x', self.Lx)
-        self.mapdl.d('all','ux',displacement)
+        self.mapdl.d('all','ux',-displacement)
         #mapdl.sf('all','pres',PRESSURE)
 
         self.mapdl.allsel()
@@ -172,7 +171,21 @@ class APDL:
         # input:
         # output: 
         return
-
+    
+    def perform_buckling_analysis(self):
+        #changed
+        self.mapdl.slashsolu()
+        self.mapdl.antype("BUCKLE")
+        self.mapdl.bucopt(method="LANB",nmode=10)
+        output = self.mapdl.solve()
+        self.mapdl.post1()
+        # i don't know if this exactly match the load multiplier, need testing
+        load_multiplier = self.mapdl.post_processing.time_values
+        load_multiplier = load_multiplier[0]
+        print(load_multiplier)
+        print(output)
+        return load_multiplier
+    
     def finish_one_iteration(self, input, result_value):
         ##TODO: implement recording and plotting##
         # input:
@@ -248,6 +261,7 @@ class APDL:
         total_area = self.Lx * self.Ly;
         solid_area_percentage = (total_area - void_area)/total_area;
         return solid_area_percentage
+    
     
     
 def plot_fun(input):
